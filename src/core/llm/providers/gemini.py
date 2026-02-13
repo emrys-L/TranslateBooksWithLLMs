@@ -138,8 +138,7 @@ class GeminiProvider(LLMProvider):
                 }]
             }],
             "generationConfig": {
-                "temperature": 0.7,
-                "maxOutputTokens": 2048
+                "temperature": 0.7
             }
         }
 
@@ -165,11 +164,18 @@ class GeminiProvider(LLMProvider):
                 response_json = response.json()
                 # Extract text from Gemini response structure
                 response_text = ""
+                was_truncated = False
                 if "candidates" in response_json and response_json["candidates"]:
-                    content = response_json["candidates"][0].get("content", {})
+                    candidate = response_json["candidates"][0]
+                    content = candidate.get("content", {})
                     parts = content.get("parts", [])
                     if parts:
                         response_text = parts[0].get("text", "")
+                    # Detect truncation via finishReason
+                    finish_reason = candidate.get("finishReason", "")
+                    if finish_reason == "MAX_TOKENS":
+                        was_truncated = True
+                        print(f"⚠️ Gemini response was truncated (finishReason: MAX_TOKENS)")
 
                 # Extract token usage if available
                 usage_metadata = response_json.get("usageMetadata", {})
@@ -182,7 +188,7 @@ class GeminiProvider(LLMProvider):
                     completion_tokens=completion_tokens,
                     context_used=prompt_tokens + completion_tokens,
                     context_limit=0,  # Gemini manages context internally
-                    was_truncated=False
+                    was_truncated=was_truncated
                 )
 
             except httpx.TimeoutException as e:

@@ -78,6 +78,9 @@ class TranslationExtractor:
         # Remove all <think>...</think> blocks completely
         response = self._remove_think_blocks(response)
 
+        # Remove markdown code block wrappers (some providers like Gemini may wrap in ```)
+        response = self._remove_markdown_code_blocks(response)
+
         response = response.strip()
 
         if len(response) < original_length:
@@ -109,6 +112,25 @@ class TranslationExtractor:
 
         # No tags found at all
         return None
+
+    def _remove_markdown_code_blocks(self, response: str) -> str:
+        """
+        Remove markdown code block wrappers from response.
+
+        Some providers (notably Gemini) may wrap responses in markdown code blocks
+        like ```xml\\n...\\n``` which prevents tag extraction.
+
+        Args:
+            response: Text potentially wrapped in markdown code blocks
+
+        Returns:
+            Text with markdown code block wrappers removed
+        """
+        # Match ```lang\n...\n``` wrapping the entire response
+        match = re.match(r'^```\w*\s*\n(.*?)\n```\s*$', response, re.DOTALL)
+        if match:
+            return match.group(1)
+        return response
 
     def _remove_think_blocks(self, response: str) -> str:
         """
