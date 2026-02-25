@@ -232,6 +232,9 @@ class EpubTranslationAdapter(TranslationAdapter[etree._Element, bool]):
         global_total_chunks = kwargs.get('global_total_chunks')
         global_completed_chunks = kwargs.get('global_completed_chunks')
 
+        # Extract bilingual flag from prompt_options (bug fix #109)
+        bilingual_flag = prompt_options.get('bilingual', False) if prompt_options else False
+
         success, stats = await translate_xhtml_simplified(
             doc_root=doc_root,
             source_language=source_language,
@@ -244,6 +247,7 @@ class EpubTranslationAdapter(TranslationAdapter[etree._Element, bool]):
             max_retries=max_retries,
             container=self.container,
             prompt_options=prompt_options,
+            bilingual=bilingual_flag,
             checkpoint_manager=checkpoint_manager,
             translation_id=translation_id,
             file_href=file_href,
