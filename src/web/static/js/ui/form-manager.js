@@ -11,6 +11,7 @@ import { DomHelpers } from './dom-helpers.js';
 import { MessageLogger } from './message-logger.js';
 import { ApiKeyUtils } from '../utils/api-key-utils.js';
 import { TranslationTracker } from '../translation/translation-tracker.js';
+import { SettingsManager } from '../core/settings-manager.js';
 
 /**
  * Set default language in select/input
