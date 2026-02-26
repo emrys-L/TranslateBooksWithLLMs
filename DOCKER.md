@@ -98,8 +98,9 @@ services:
       - API_ENDPOINT=http://ollama-server.local:11434/api/generate
       - LLM_PROVIDER=ollama
     extra_hosts:
-      # Map hostname to IP (required for Docker Desktop on Windows/Mac)
-      - "ollama-server.local:192.168.1.100"
+      # Replace with your Ollama server's IP address
+      # Example: if your server is at 192.168.1.50
+      - "ollama-server.local:YOUR_OLLAMA_SERVER_IP"
     volumes:
       - ./translated_files:/app/translated_files
       - ./logs:/app/logs

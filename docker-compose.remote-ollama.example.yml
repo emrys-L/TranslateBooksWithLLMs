@@ -30,8 +30,9 @@ services:
       - SIGNATURE_ENABLED=false
       - DEBUG_MODE=true
     extra_hosts:
-      # Replace with your Ollama server's hostname and IP
-      - "ollama-server.local:192.168.1.100"
+      # Replace 'ollama-server.local' with your server's hostname
+      # Replace 'YOUR_OLLAMA_SERVER_IP' with your server's IP address
+      - "ollama-server.local:YOUR_OLLAMA_SERVER_IP"
     volumes:
       - ./translated_files:/app/translated_files
       - ./logs:/app/logs
