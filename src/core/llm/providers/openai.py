@@ -34,6 +34,10 @@ class OpenAICompatibleProvider(LLMProvider):
         self._detected_context_size: Optional[int] = None
         self._context_detector = ContextDetector()
 
+    def _is_official_openai_endpoint(self) -> bool:
+        """Check if the endpoint is the official OpenAI API."""
+        return "api.openai.com" in self.api_endpoint
+
     @staticmethod
     def _normalize_endpoint(endpoint: str) -> str:
         """
@@ -94,15 +98,13 @@ class OpenAICompatibleProvider(LLMProvider):
             "model": self.model,
             "messages": messages,
             "stream": False,
-            # Disable thinking/reasoning mode for local servers and compatible APIs
-            # This prevents models from outputting <think>...</think> blocks
-            "thinking": False,
-            "enable_thinking": False,
-            # Some servers use chat_template_kwargs
-            "chat_template_kwargs": {
-                "enable_thinking": False
-            }
         }
+
+        # Only add thinking-disable params for local/compatible servers, not official OpenAI API
+        if not self._is_official_openai_endpoint():
+            payload["thinking"] = False
+            payload["enable_thinking"] = False
+            payload["chat_template_kwargs"] = {"enable_thinking": False}
 
         client = await self._get_client()
         for attempt in range(MAX_TRANSLATION_ATTEMPTS):
