@@ -13,7 +13,8 @@ from src.config import (
     OPENROUTER_API_KEY, OPENROUTER_MODEL,
     MISTRAL_API_KEY, MISTRAL_MODEL, MISTRAL_API_ENDPOINT,
     DEEPSEEK_API_KEY, DEEPSEEK_MODEL, DEEPSEEK_API_ENDPOINT,
-    POE_API_KEY, POE_MODEL, POE_API_ENDPOINT
+    POE_API_KEY, POE_MODEL, POE_API_ENDPOINT,
+    NIM_API_KEY, NIM_MODEL, NIM_API_ENDPOINT
 )
 from .base import LLMProvider
 from .providers.ollama import OllamaProvider
@@ -139,5 +140,17 @@ def create_llm_provider(provider_type: str = "ollama", **kwargs) -> LLMProvider:
             model=kwargs.get("model", POE_MODEL),
             api_endpoint=POE_API_ENDPOINT
         )
+    elif provider_type.lower() == "nim":
+        api_key = kwargs.get("api_key") or kwargs.get("nim_api_key")
+        if not api_key:
+            api_key = os.getenv("NIM_API_KEY", NIM_API_KEY)
+            if not api_key:
+                raise ValueError("NVIDIA NIM provider requires an API key. Get your key at https://build.nvidia.com/")
+        return OpenAICompatibleProvider(
+            api_key=api_key,
+            model=kwargs.get("model", NIM_MODEL),
+            api_endpoint=kwargs.get("api_endpoint", NIM_API_ENDPOINT)
+        )
+
     else:
         raise ValueError(f"Unknown provider type: {provider_type}")

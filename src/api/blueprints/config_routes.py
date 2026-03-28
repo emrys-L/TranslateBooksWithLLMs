@@ -45,6 +45,8 @@ from src.config import (
     DEEPSEEK_API_KEY,
     DEEPSEEK_MODEL,
     POE_API_KEY,
+    NIM_API_KEY,
+    NIM_MODEL,
     POE_MODEL,
     MAX_TOKENS_PER_CHUNK,
     OUTPUT_FILENAME_PATTERN
@@ -119,6 +121,8 @@ def create_config_blueprint(server_session_id=None):
             return _get_deepseek_models(api_key)
         elif provider == 'poe':
             return _get_poe_models(api_key)
+        elif provider == 'nim':
+            return _get_nim_models(api_key)
         elif provider == 'openai':
             # Get endpoint from request for LM Studio support
             if request.method == 'POST':
@@ -158,12 +162,14 @@ def create_config_blueprint(server_session_id=None):
             "mistral_api_key": mask_api_key(MISTRAL_API_KEY),
             "deepseek_api_key": mask_api_key(DEEPSEEK_API_KEY),
             "poe_api_key": mask_api_key(POE_API_KEY),
+            "nim_api_key": mask_api_key(NIM_API_KEY),
             "gemini_api_key_configured": bool(GEMINI_API_KEY),
             "openai_api_key_configured": bool(OPENAI_API_KEY),
             "openrouter_api_key_configured": bool(OPENROUTER_API_KEY),
             "mistral_api_key_configured": bool(MISTRAL_API_KEY),
             "deepseek_api_key_configured": bool(DEEPSEEK_API_KEY),
             "poe_api_key_configured": bool(POE_API_KEY),
+            "nim_api_key_configured": bool(NIM_API_KEY),
             "output_filename_pattern": OUTPUT_FILENAME_PATTERN
         }
 
@@ -410,6 +416,95 @@ def create_config_blueprint(server_session_id=None):
                 "status": "poe_error",
                 "count": 0,
                 "error": f"Error connecting to Poe API: {str(e)}"
+            })
+
+    def _get_nim_models(provided_api_key=None):
+        """Get available models from NVIDIA NIM API"""
+        from src.config import NIM_API_ENDPOINT
+
+        api_key = _resolve_api_key(provided_api_key, 'NIM_API_KEY', NIM_API_KEY)
+
+        # Use NIM_MODEL from .env, fallback to meta/llama-3.1-8b-instruct
+        default_model = NIM_MODEL if NIM_MODEL else "meta/llama-3.1-8b-instruct"
+
+        if not api_key:
+            return jsonify({
+                "models": [],
+                "model_names": [],
+                "default": default_model,
+                "status": "api_key_missing",
+                "count": 0,
+                "error": "NVIDIA NIM API key is required. Get your key at https://build.nvidia.com/"
+            })
+
+        try:
+            # Determine base URL from endpoint
+            base_url = NIM_API_ENDPOINT.replace('/chat/completions', '').rstrip('/')
+            models_url = f"{base_url}/models"
+            headers = {'Authorization': f'Bearer {api_key}'}
+
+            response = requests.get(models_url, headers=headers, timeout=10)
+
+            if response.status_code == 200:
+                data = response.json()
+                models_data = data.get('data', [])
+
+                if models_data:
+                    # Filter and format models
+                    models = []
+                    for m in models_data:
+                        model_id = m.get('id', '')
+                        # Skip embedding models and other non-chat models
+                        if 'embedding' in model_id.lower() or 'whisper' in model_id.lower():
+                            continue
+                        models.append({
+                            'id': model_id,
+                            'name': model_id,
+                            'owned_by': m.get('owned_by', 'nvidia')
+                        })
+
+                    # Sort models by name
+                    models.sort(key=lambda x: x['name'].lower())
+
+                    if models:
+                        model_ids = [m['id'] for m in models]
+                        if default_model not in model_ids and model_ids:
+                            default_model = model_ids[0]
+                        return jsonify({
+                            "models": models,
+                            "model_names": model_ids,
+                            "default": default_model,
+                            "status": "nim_connected",
+                            "count": len(models)
+                        })
+
+            # If API call failed, return empty with error
+            return jsonify({
+                "models": [],
+                "model_names": [],
+                "default": default_model,
+                "status": "nim_error",
+                "count": 0,
+                "error": f"Failed to retrieve NVIDIA NIM models (HTTP {response.status_code})"
+            })
+
+        except requests.exceptions.ConnectionError:
+            return jsonify({
+                "models": [],
+                "model_names": [],
+                "default": default_model,
+                "status": "nim_error",
+                "count": 0,
+                "error": "Could not connect to NVIDIA NIM API. Check your internet connection."
+            })
+        except Exception as e:
+            return jsonify({
+                "models": [],
+                "model_names": [],
+                "default": default_model,
+                "status": "nim_error",
+                "count": 0,
+                "error": f"Error connecting to NVIDIA NIM API: {str(e)}"
             })
 
     def _get_openai_models(provided_api_key=None, api_endpoint=None):
@@ -777,6 +872,8 @@ def create_config_blueprint(server_session_id=None):
             'DEEPSEEK_MODEL',
             'POE_API_KEY',
             'POE_MODEL',
+            'NIM_API_KEY',
+            'NIM_MODEL',
             'DEFAULT_MODEL',
             'LLM_PROVIDER',
             'API_ENDPOINT',
@@ -830,6 +927,7 @@ def create_config_blueprint(server_session_id=None):
             "mistral_api_key_configured": bool(MISTRAL_API_KEY),
             "deepseek_api_key_configured": bool(DEEPSEEK_API_KEY),
             "poe_api_key_configured": bool(POE_API_KEY),
+            "nim_api_key_configured": bool(NIM_API_KEY),
             "default_model": DEFAULT_MODEL or "",
             "llm_provider": os.getenv('LLM_PROVIDER', 'ollama'),
             "api_endpoint": DEFAULT_OLLAMA_API_ENDPOINT or "",

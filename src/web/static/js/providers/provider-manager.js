@@ -26,7 +26,8 @@ const PROVIDER_LOGOS = {
     mistral: '/static/img/providers/mistral.png',
     gemini: '/static/img/providers/gemini.png',
     openai: '/static/img/providers/openai.png',
-    openrouter: '/static/img/providers/openrouter.png'
+    openrouter: '/static/img/providers/openrouter.png',
+    nim: '/static/img/providers/nvidia.png'
 };
 
 /**
@@ -39,7 +40,8 @@ const PROVIDER_META = {
     mistral: { name: 'Mistral', description: 'Cloud API' },
     gemini: { name: 'Gemini', description: 'Cloud' },
     openai: { name: 'OpenAI', description: 'Compatible' },
-    openrouter: { name: 'OpenRouter', description: '200+ models' }
+    openrouter: { name: 'OpenRouter', description: '200+ models' },
+    nim: { name: 'NVIDIA NIM', description: 'Cloud API' }
 };
 
 /**
@@ -139,6 +141,23 @@ const POE_FALLBACK_MODELS = [
     { value: 'assistant', label: 'Assistant (Router)', group: 'Poe Bots' },
     { value: 'exa-answer', label: 'Exa Answer (Web Search)', group: 'Poe Bots' },
     { value: 'exa-search', label: 'Exa Search', group: 'Poe Bots' }
+];
+
+/**
+ * Fallback NVIDIA NIM models list (used when API fetch fails)
+ * See all models at: https://build.nvidia.com/explore/discover
+ */
+const NIM_FALLBACK_MODELS = [
+    { value: 'meta/llama-3.1-8b-instruct', label: 'Llama 3.1 8B Instruct (128k ctx)' },
+    { value: 'meta/llama-3.1-70b-instruct', label: 'Llama 3.1 70B Instruct (128k ctx)' },
+    { value: 'meta/llama-3.1-405b-instruct', label: 'Llama 3.1 405B Instruct (128k ctx)' },
+    { value: 'meta/llama-3.2-1b-instruct', label: 'Llama 3.2 1B Instruct (128k ctx)' },
+    { value: 'meta/llama-3.2-3b-instruct', label: 'Llama 3.2 3B Instruct (128k ctx)' },
+    { value: 'mistralai/mistral-nemo-12b-instruct', label: 'Mistral Nemo 12B Instruct (128k ctx)' },
+    { value: 'mistralai/mixtral-8x7b-instruct-v0.1', label: 'Mixtral 8x7B Instruct v0.1 (32k ctx)' },
+    { value: 'nvidia/llama-3.1-nemotron-70b-instruct', label: 'Llama 3.1 Nemotron 70B Instruct (128k ctx)' },
+    { value: 'deepseek-ai/deepseek-v3', label: 'DeepSeek V3 (128k ctx)' },
+    { value: 'deepseek-ai/deepseek-r1', label: 'DeepSeek R1 (128k ctx)' }
 ];
 
 /**

@@ -9,7 +9,7 @@ import logging
 # Reduce verbosity of httpx (avoid showing 400 errors during model detection)
 logging.getLogger('httpx').setLevel(logging.WARNING)
 
-from src.config import DEFAULT_MODEL, API_ENDPOINT, LLM_PROVIDER, GEMINI_API_KEY, OPENAI_API_KEY, OPENROUTER_API_KEY, MISTRAL_API_KEY, DEEPSEEK_API_KEY, POE_API_KEY, DEFAULT_SOURCE_LANGUAGE, DEFAULT_TARGET_LANGUAGE
+from src.config import DEFAULT_MODEL, API_ENDPOINT, LLM_PROVIDER, GEMINI_API_KEY, OPENAI_API_KEY, OPENROUTER_API_KEY, MISTRAL_API_KEY, DEEPSEEK_API_KEY, POE_API_KEY, NIM_API_KEY, DEFAULT_SOURCE_LANGUAGE, DEFAULT_TARGET_LANGUAGE
 from src.utils.file_utils import get_unique_output_path, generate_tts_for_translation
 from src.utils.unified_logger import setup_cli_logger, LogType
 from src.tts.tts_config import TTSConfig, TTS_ENABLED, TTS_VOICE, TTS_RATE, TTS_BITRATE, TTS_OUTPUT_FORMAT
@@ -26,13 +26,14 @@ if __name__ == "__main__":
     parser.add_argument("-tl", "--target_lang", default=DEFAULT_TARGET_LANGUAGE, help=f"Target language (default: {DEFAULT_TARGET_LANGUAGE}).")
     parser.add_argument("-m", "--model", default=DEFAULT_MODEL, help=f"LLM model (default: {DEFAULT_MODEL}).")
     parser.add_argument("--api_endpoint", default=API_ENDPOINT, help=f"API endpoint for Ollama or OpenAI-compatible servers (llama.cpp, LM Studio, vLLM, etc.) (default: {API_ENDPOINT}).")
-    parser.add_argument("--provider", default=LLM_PROVIDER, choices=["ollama", "gemini", "openai", "openrouter", "mistral", "deepseek", "poe"], help=f"LLM provider (default: {LLM_PROVIDER}). Use 'openai' for any OpenAI-compatible server.")
+    parser.add_argument("--provider", default=LLM_PROVIDER, choices=["ollama", "gemini", "openai", "openrouter", "mistral", "deepseek", "poe", "nim"], help=f"LLM provider (default: {LLM_PROVIDER}). Use 'openai' for any OpenAI-compatible server.")
     parser.add_argument("--gemini_api_key", default=GEMINI_API_KEY, help="Google Gemini API key (required if using gemini provider).")
     parser.add_argument("--openai_api_key", default=OPENAI_API_KEY, help="OpenAI API key (required for OpenAI cloud, not needed for local servers).")
     parser.add_argument("--openrouter_api_key", default=OPENROUTER_API_KEY, help="OpenRouter API key (required if using openrouter provider).")
     parser.add_argument("--mistral_api_key", default=MISTRAL_API_KEY, help="Mistral API key (required if using mistral provider).")
     parser.add_argument("--deepseek_api_key", default=DEEPSEEK_API_KEY, help="DeepSeek API key (required if using deepseek provider).")
     parser.add_argument("--poe_api_key", default=POE_API_KEY, help="Poe API key (required if using poe provider). Get your key at https://poe.com/api_key")
+    parser.add_argument("--nim_api_key", default=NIM_API_KEY, help="NVIDIA NIM API key (required if using nim provider). Get your key at https://build.nvidia.com/")
     parser.add_argument("--no-color", action="store_true", help="Disable colored output.")
 
     # Prompt options (optional system prompt instructions)
@@ -49,6 +50,22 @@ if __name__ == "__main__":
     tts_group.add_argument("--tts-format", default=TTS_OUTPUT_FORMAT, choices=["opus", "mp3"], help="Audio output format (default: %(default)s).")
 
     args = parser.parse_args()
+
+    # Auto-select default model based on provider if not explicitly set
+    from src.config import NIM_MODEL, MISTRAL_MODEL, DEEPSEEK_MODEL, POE_MODEL, OPENROUTER_MODEL, GEMINI_MODEL
+    if args.model == DEFAULT_MODEL:
+        if args.provider == "nim" and NIM_MODEL:
+            args.model = NIM_MODEL
+        elif args.provider == "mistral" and MISTRAL_MODEL:
+            args.model = MISTRAL_MODEL
+        elif args.provider == "deepseek" and DEEPSEEK_MODEL:
+            args.model = DEEPSEEK_MODEL
+        elif args.provider == "poe" and POE_MODEL:
+            args.model = POE_MODEL
+        elif args.provider == "openrouter" and OPENROUTER_MODEL:
+            args.model = OPENROUTER_MODEL
+        elif args.provider == "gemini" and GEMINI_MODEL:
+            args.model = GEMINI_MODEL
 
     if args.output is None:
         base, ext = os.path.splitext(args.input)
@@ -87,6 +104,8 @@ if __name__ == "__main__":
         parser.error("--deepseek_api_key is required when using deepseek provider")
     if args.provider == "poe" and not args.poe_api_key:
         parser.error("--poe_api_key is required when using poe provider. Get your key at https://poe.com/api_key")
+    if args.provider == "nim" and not args.nim_api_key:
+        parser.error("--nim_api_key is required when using nim provider. Get your key at https://build.nvidia.com/")
 
     # Log translation start
     logger.info("Translation Started", LogType.TRANSLATION_START, {
@@ -145,6 +164,7 @@ if __name__ == "__main__":
             mistral_api_key=args.mistral_api_key,
             deepseek_api_key=args.deepseek_api_key,
             poe_api_key=args.poe_api_key,
+            nim_api_key=args.nim_api_key,
             prompt_options=prompt_options
         ))
 

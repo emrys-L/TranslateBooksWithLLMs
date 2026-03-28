@@ -205,6 +205,10 @@ DEEPSEEK_API_ENDPOINT = os.getenv('DEEPSEEK_API_ENDPOINT', 'https://api.deepseek
 POE_API_KEY = os.getenv('POE_API_KEY', '')
 POE_MODEL = os.getenv('POE_MODEL', 'Claude-Sonnet-4')
 POE_API_ENDPOINT = os.getenv('POE_API_ENDPOINT', 'https://api.poe.com/v1/chat/completions')
+# NVIDIA NIM configuration (hosted cloud API for Llama, Mistral, and other models)
+NIM_API_KEY = os.getenv('NIM_API_KEY', '')
+NIM_MODEL = os.getenv('NIM_MODEL', 'meta/llama-3.1-8b-instruct')
+NIM_API_ENDPOINT = os.getenv('NIM_API_ENDPOINT', 'https://integrate.api.nvidia.com/v1/chat/completions')
 
 # SRT-specific configuration
 SRT_LINES_PER_BLOCK = int(os.getenv('SRT_LINES_PER_BLOCK', '5'))
@@ -449,6 +453,7 @@ class TranslationConfig:
     mistral_api_key: str = MISTRAL_API_KEY
     deepseek_api_key: str = DEEPSEEK_API_KEY
     poe_api_key: str = POE_API_KEY
+    nim_api_key: str = NIM_API_KEY
 
     # LLM parameters
     timeout: int = REQUEST_TIMEOUT
@@ -487,6 +492,7 @@ class TranslationConfig:
             mistral_api_key=getattr(args, 'mistral_api_key', MISTRAL_API_KEY),
             deepseek_api_key=getattr(args, 'deepseek_api_key', DEEPSEEK_API_KEY),
             poe_api_key=getattr(args, 'poe_api_key', POE_API_KEY),
+            nim_api_key=getattr(args, 'nim_api_key', NIM_API_KEY),
             max_tokens_per_chunk=getattr(args, 'max_tokens_per_chunk', MAX_TOKENS_PER_CHUNK),
             soft_limit_ratio=getattr(args, 'soft_limit_ratio', SOFT_LIMIT_RATIO)
         )
@@ -515,6 +521,7 @@ class TranslationConfig:
             mistral_api_key=request_data.get('mistral_api_key', MISTRAL_API_KEY),
             deepseek_api_key=request_data.get('deepseek_api_key', DEEPSEEK_API_KEY),
             poe_api_key=request_data.get('poe_api_key', POE_API_KEY),
+            nim_api_key=request_data.get('nim_api_key', NIM_API_KEY),
             max_tokens_per_chunk=request_data.get('max_tokens_per_chunk', MAX_TOKENS_PER_CHUNK),
             soft_limit_ratio=request_data.get('soft_limit_ratio', SOFT_LIMIT_RATIO)
         )
@@ -537,6 +544,7 @@ class TranslationConfig:
             'mistral_api_key': self.mistral_api_key,
             'deepseek_api_key': self.deepseek_api_key,
             'poe_api_key': self.poe_api_key,
+            'nim_api_key': self.nim_api_key,
             'max_tokens_per_chunk': self.max_tokens_per_chunk,
             'soft_limit_ratio': self.soft_limit_ratio
         }
