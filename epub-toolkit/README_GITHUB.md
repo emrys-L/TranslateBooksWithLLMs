@@ -96,6 +96,19 @@ EOF
 
 ## 🎯 快速开始
 
+### ⚡ 核心配置（重要！）
+
+**成功翻译《Capitalism: A Global History》（25MB, 54 章）的唯一特殊配置：**
+
+```bash
+export REQUEST_TIMEOUT=600  # 10 分钟超时
+```
+
+**不需要**任何特殊的 chunk 大小、上下文窗口或其他参数！默认配置已经过生产验证：
+- 默认 `MAX_TOKENS_PER_CHUNK=450` ✅
+- 默认 chunking 逻辑 ✅
+- 默认上下文窗口 ✅
+
 ### 方法 1：使用启动脚本（推荐）
 
 ```bash
@@ -257,6 +270,32 @@ cp Capitalism_A_Global_History.epub .
 | **隐私** | ✅ 完全本地 | ❌ 云端处理 |
 
 **结论**: 本地模型在质量和成本上完胜！
+
+#### 📝 使用的实际配置
+
+**启动命令**（完整重现）：
+```bash
+cd /home/syrme/TranslateBooksWithLLMs
+export REQUEST_TIMEOUT=600
+nohup python3 translate.py \
+  -i book.epub \
+  -sl English -tl Chinese \
+  -m qwen35-397b-a17b \
+  --provider openai \
+  --openai_api_key sSMCVe7TBAJPx0d0Ff4cB3569f7a41B7980bFd02888fA7A8 \
+  --api_endpoint http://192.168.80.121:32788/v1/chat/completions \
+  >> translation.log 2>&1 &
+```
+
+**关键配置**：
+- ✅ `REQUEST_TIMEOUT=600` - **唯一需要的特殊配置**
+- ✅ 默认 `MAX_TOKENS_PER_CHUNK=450` - 无需修改
+- ✅ 默认 chunking 逻辑 - 自动处理
+- ✅ 无额外的 chunk 大小、上下文窗口参数
+
+**经验总结**：
+> 不要过度配置！默认配置 + `REQUEST_TIMEOUT=600` 已经过生产验证。
+> 任何额外的参数（如 `MAX_TOKENS_PER_CHUNK=1000`）都可能导致意外问题。
 
 ---
 
